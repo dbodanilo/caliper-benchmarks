@@ -65,6 +65,8 @@ services:
     image: caliper-ethereum-clique
     depends_on:
       - geth-bootnode
+    volumes:
+      - ./keys:/root/.ethereum/keystore
     ports:
       - "30301:30301/tcp"
       - "30301:30301/udp"
