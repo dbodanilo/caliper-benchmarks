@@ -1,0 +1,78 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# reference: https://medium.com/scb-digital/running-a-private-ethereum-blockchain-using-docker-589c8e6a4fe8
+# gist: https://gist.github.com/nhapentor/47a0aac5b32e9bb30c36c13adfd2490c
+
+version: "3"
+
+services:
+  geth-bootnode:
+    env_file:
+      - .env
+    build: .
+    image: caliper-ethereum-clique
+    # container_name: ethereum_clique
+    ports:
+      - "30303:30303/tcp"
+      - "30303:30303/udp"
+    command:
+      --nodekeyhex="b0ac22adcad37213c7c565810a50f1772291e7b0ce53fb73e7ec2a3c75bc13b5"
+      --nodiscover
+      --ipcdisable
+      --networkid=${NETWORK_ID}
+
+  geth-rpc-endpoint:
+    env_file:
+      - .env
+    build: .
+    image: caliper-ethereum-clique
+    depends_on:
+      - geth-bootnode
+    volumes:
+      - ./keys:/root/.ethereum/keystore
+    ports:
+      - "30302:30302/tcp"
+      - "30302:30302/udp"
+      - 8546:8546
+    command:
+      --bootnodes="enode://af22c29c316ad069cf48a09a4ad5cf04a251b411e45098888d114c6dd7f489a13786620d5953738762afa13711d4ffb3b19aa5de772d8af72f851f7e9c5b164a@192.168.0.202:30303"
+      --port=30302
+      --networkid=${NETWORK_ID}
+      --unlock 0xc0A8e4D217eB85b812aeb1226fAb6F588943C2C2
+      --password /root/.ethereum/keystore/password
+      --allow-insecure-unlock
+      --ws
+      --ws.addr="0.0.0.0"
+      --ws.api="admin,eth,net,personal,web3"
+      --ws.origins="*"
+
+  geth-miner:
+    env_file:
+      - .env
+    build: .
+    image: caliper-ethereum-clique
+    depends_on:
+      - geth-bootnode
+    ports:
+      - "30301:30301/tcp"
+      - "30301:30301/udp"
+    command:
+      --bootnodes="enode://af22c29c316ad069cf48a09a4ad5cf04a251b411e45098888d114c6dd7f489a13786620d5953738762afa13711d4ffb3b19aa5de772d8af72f851f7e9c5b164a@192.168.0.202:30303"
+      --port=30301
+      --networkid=${NETWORK_ID}
+      --mine
+      --miner.threads=2
+      --miner.etherbase 0xc0A8e4D217eB85b812aeb1226fAb6F588943C2C2 
+      --miner.gasprice=1
