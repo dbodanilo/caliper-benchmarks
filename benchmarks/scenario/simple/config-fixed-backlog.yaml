@@ -1,0 +1,47 @@
+---
+test:
+  name: simple-fixed-backlog
+  description: This is an example benchmark for caliper, to test the backend DLT's
+    performance with simple account opening & querying transactions
+  workers:
+    type: local
+    number: 1
+  rounds:
+  - label: open
+    description: Test description for the opening of an account through the deployed chaincode
+    txDuration: 100
+    rateControl:
+      type: fixed-backlog
+      opts:
+        unfinished_per_client: 5
+        startingTps: 50
+    arguments:
+      money: 10000
+    callback: benchmarks/scenario/simple/open.js
+  - label: query
+    description: Test description for the query performance of the deployed chaincode
+    txDuration: 100
+    rateControl:
+      type: fixed-backlog
+      opts:
+        unfinished_per_client: 5
+        startingTps: 100
+    callback: benchmarks/scenario/simple/query.js
+  - label: transfer
+    description: Test description for transfering money between accounts
+    txDuration: 100
+    rateControl:
+      type: fixed-backlog
+      opts:
+        unfinished_per_client: 5
+        startingTps: 50
+    arguments:
+        money: 100
+    callback: benchmarks/scenario/simple/transfer.js
+monitor:
+  type:
+  - docker
+  docker:
+    name:
+    - all
+  interval: 1
